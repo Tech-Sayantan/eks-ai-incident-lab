@@ -18,4 +18,8 @@ variable "expected_account_id" {
     error_message = "Provide a 12-digit AWS account ID."
   }
 }
+variable "github_repo_id" {
+  description = "GitHub's numeric ID for the implementation repository."
+  type        = string
+}
 

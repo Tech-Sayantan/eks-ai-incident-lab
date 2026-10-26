@@ -1,0 +1,21 @@
+name: AWS OIDC smoke test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+
+jobs:
+  identity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::923988301700:role/eks-ai-incident-lab-gha-identity
+          aws-region: ap-south-1
+          allowed-account-ids: 923988301700
+
+      - name: Show AWS identity
+        run: aws sts get-caller-identity

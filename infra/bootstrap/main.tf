@@ -54,6 +54,8 @@ resource "aws_s3_bucket_versioning" "state" {
     status = "Enabled"
   }
 }
+# POC decision: SSE-S3 encrypts state without a customer-managed KMS key and its cost/access setup.
+#trivy:ignore:AVD-AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   bucket = aws_s3_bucket.state.id
 

@@ -8,3 +8,5 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [02 — Terraform CI and Trivy](02-terraform-ci-and-trivy.md) | GitHub Actions checks, static validation, IaC scanning, finding triage |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
+
+Current status: S3 bootstrap, GitHub OIDC smoke test, and Terraform format/validate/Trivy CI are verified. The next checkpoint is the network module; no EKS cluster is running yet.

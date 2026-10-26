@@ -2,7 +2,9 @@
 
 ## Current checkpoint
 
-The first GitHub Actions Terraform run reached all four checks. Formatting, provider initialization without a backend, and Terraform validation passed. Trivy's IaC scan failed with one HIGH finding: `AWS-0132` on the bootstrap state bucket's SSE-S3 (`AES256`) encryption. The code fix is **pending Tan's type-along and a passing rerun**.
+The first GitHub Actions Terraform run reached all four checks. Formatting, provider initialization without a backend, and Terraform validation passed. Trivy's IaC scan failed with one HIGH finding: `AWS-0132` on the bootstrap state bucket's SSE-S3 (`AES256`) encryption.
+
+**Verified 27 October 2026:** Trunks added the documented inline exception only above the affected encryption resource at Tan's request. Local Terraform validation passed, and a read-only plan returned no changes. [The rerun](https://github.com/Tech-Sayantan/eks-ai-incident-lab/actions/runs/40397586589) passed every step, including Trivy. The change did not modify any AWS resource.
 
 The workflow is intentionally credential-free. It does not read the live S3 state, calculate an AWS plan, or apply resources. The OIDC smoke role is not used by this workflow.
 
@@ -20,9 +22,13 @@ The workflow is intentionally credential-free. It does not read the live S3 stat
 
 Trivy recommends a customer-managed KMS key for greater control over key access, rotation, and auditability. The lab bucket uses S3-managed SSE-S3. AWS confirms SSE-S3 encrypts new S3 objects at no additional encryption charge. Customer-managed SSE-KMS adds KMS charges and requires the backend, human operator, and CI roles to have suitable KMS access.
 
-For this short-lived, single-account POC, we keep SSE-S3 plus the existing private access, public-access blocks, TLS-only policy, versioning, and state locking. We will place an **inline ignore for `AVD-AWS-0132` immediately above this bucket-encryption resource**, with a short reason. This scopes the exception to one resource; it does not turn off Trivy or ignore future findings on other resources. A production team with customer-managed-key requirements should implement SSE-KMS and test its key policy and recovery procedure.
+For this short-lived, single-account POC, we keep SSE-S3 plus the existing private access, public-access blocks, TLS-only policy, versioning, and state locking. An **inline ignore for `AVD-AWS-0132` sits immediately above this bucket-encryption resource**, with a short reason. This scopes the exception to one resource; it does not turn off Trivy or ignore future findings on other resources. A production team with customer-managed-key requirements should implement SSE-KMS and test its key policy and recovery procedure.
 
 This is a risk decision, not a claim that SSE-S3 and customer-managed SSE-KMS provide identical controls.
+
+The passing run emitted a nonblocking notice that `actions/checkout@v4` targets Node.js 20 and was forced to run on Node.js 24. The workflow succeeded; review an action-version update in a later CI maintenance checkpoint rather than mixing it into this encryption decision.
+
+**Next hands-on checkpoint:** write our own compact VPC/network Terraform module. Explain CIDR planning, two Availability Zones, public/private subnets, route tables, Internet Gateway, NAT and its cost tradeoff, and EKS subnet needs before any paid apply.
 
 ## Real-world troubleshooting
 

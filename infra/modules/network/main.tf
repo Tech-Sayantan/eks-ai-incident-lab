@@ -16,6 +16,9 @@ resource "aws_internet_gateway" "this" {
   }
 }
 
+# POC decision: public managed EKS nodes need auto-assigned public IPv4.
+# We avoid NAT gateway cost for this short-lived lab; node security groups come with EKS.
+#trivy:ignore:AVD-AWS-0164
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 

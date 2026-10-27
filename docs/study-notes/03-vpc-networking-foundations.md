@@ -35,7 +35,7 @@ Every VPC has a default SG and NACL. Subnets not explicitly associated with a cu
 
 ## Delivery and state decision
 
-The lab's AWS infrastructure will use a PR and GitHub Actions pipeline. First extend CI to format, initialize without a backend, validate and scan both Terraform roots. Then add the lab root's own S3 state key, distinct from bootstrap. A later OIDC planning role will allow an internal PR plan; a separate controlled apply path on the trusted main revision will require Tan's deliberate trigger/approval. Do not automatically apply an old PR plan after merge. The GitHub repository is private, so required-reviewer environment protection must be checked against the actual plan's feature availability; PR merge plus a manual deployment trigger is a workable explicit gate if required reviewers are unavailable. Bootstrap IAM may need a one-time local apply to grant the pipeline its initial scoped permissions.
+The lab's AWS infrastructure will use a PR and GitHub Actions pipeline. First extend CI to format, initialize without a backend, validate and scan both Terraform roots. Then add the lab root's own S3 state key, distinct from bootstrap. A later OIDC planning role will allow an internal PR plan; a separate controlled apply path on the trusted main revision will require Tan's deliberate trigger/approval. Do not automatically apply an old PR plan after merge. This repository is private and the connected GitHub account reports the Free plan. GitHub's required-reviewer environment protection is unavailable for this combination, so PR review/merge plus a manual deployment trigger will be the explicit gate. Bootstrap IAM may need a one-time local apply to grant the pipeline its initial scoped permissions.
 
 ## Interview quick answers
 

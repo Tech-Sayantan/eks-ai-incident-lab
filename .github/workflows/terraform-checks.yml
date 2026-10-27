@@ -26,12 +26,20 @@ jobs:
       - name: Check Terraform formatting
         run: terraform fmt -check -recursive infra
 
-      - name: Initialize providers without remote state
+      - name: Initialize bootstrap providers without remote state
         working-directory: infra/bootstrap
         run: terraform init -backend=false -input=false
 
-      - name: Validate Terraform
+      - name: Validate bootstrap Terraform
         working-directory: infra/bootstrap
+        run: terraform validate -no-color
+
+      - name: Initialize lab providers without remote state
+        working-directory: infra/live/lab
+        run: terraform init -backend=false -input=false
+
+      - name: Validate lab Terraform
+        working-directory: infra/live/lab
         run: terraform validate -no-color
 
       - name: Scan Terraform configuration

@@ -5,6 +5,7 @@ on:
     paths:
       - "infra/**"
       - ".github/workflows/terraform-checks.yml"
+      - ".github/workflows/network-plan.yml"
   workflow_dispatch:
 
 permissions:

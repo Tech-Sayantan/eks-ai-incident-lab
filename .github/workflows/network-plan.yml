@@ -1,0 +1,41 @@
+name: AWS network plan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+
+    env:
+      TF_VAR_expected_account_id: "923988301700"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.7"
+
+      - name: Assume AWS plan role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::923988301700:role/eks-ai-incident-lab-gha-plan
+          aws-region: ap-south-1
+          allowed-account-ids: "923988301700"
+
+      - name: Confirm AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Initialize lab backend
+        run: terraform -chdir=infra/live/lab init -input=false -no-color
+
+      - name: Preview network changes
+        run: terraform -chdir=infra/live/lab plan -input=false -no-color -lock-timeout=60s

@@ -25,7 +25,17 @@ local branch --git push--> GitHub branch --gh pr create--> pull request
 3. **Merge:** combines the accepted branch into `main`. It changes Git history. It triggers CD only if a workflow or GitOps controller watches the resulting Git event or desired-state change.
 4. **Deployment:** a separate job may build/publish an artifact, update environment configuration, or run a reviewed Terraform plan. A manual `workflow_dispatch` is another possible trigger. Verify the deployed result; a green build is not proof of a healthy environment.
 
-This private repository uses GitHub Free. Required branch protection and required environment reviewers are unavailable for this combination. The lab therefore uses visible PR checks, a deliberate merge decision, and a separate manual apply trigger. There was no formal approving review on PR #1. The person who merged was the connected `Tech-Sayantan` account; a merge is not the same as a review approval.
+The repository was private on GitHub Free through PR #2, when required branch protection and required environment reviewers were unavailable for that combination. Tan made it public on 29 October 2026. Public visibility does not automatically install branch protection: GitHub's branch-protection API currently reports `main` is unprotected. The lab therefore uses visible PR checks and a deliberate merge decision. Neither PR #1 nor PR #2 had a formal approving review. The connected `Tech-Sayantan` account merged both; a merge is not a review approval.
+
+## PR #2: what squash actually did
+
+[PR #2](https://github.com/Tech-Sayantan/eks-ai-incident-lab/pull/2) contained two feature-branch commits: `35c303e` added this checkpoint's study notes, and `c998cab` added the OIDC Terraform role. The Terraform `check` job passed in [run 40758594823](https://github.com/Tech-Sayantan/eks-ai-incident-lab/actions/runs/40758594823). GitHub records **zero reviews** and a merge by `Tech-Sayantan`. `--squash` combined the two commits' final file changes into one new `main` commit, `3f481c7`. The original two commits remain visible in the PR; `main` has the one combined commit. `--delete-branch` removed the remote feature branch after merging. No GitHub actor approved the PR; the merge decision was made without an enforced approval rule.
+
+```text
+feature:  35c303e (notes) -> c998cab (Terraform)
+                                  | squash merge
+main:     d5457cf -----------> 3f481c7 (both changes)
+```
 
 ## This lab's infrastructure delivery
 

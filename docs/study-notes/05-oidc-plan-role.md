@@ -2,7 +2,7 @@
 
 ## Observed checkpoint
 
-Tan typed `infra/bootstrap/gha-terraform-plan.tf` on branch `codex/gha-plan-role`. On 29 October 2026, Trunks independently checked formatting and validation, verified the named AWS profile points to account `923988301700`, and ran a live bootstrap plan. The result was **2 to add, 0 to change, 0 to destroy**: one IAM role and one inline policy. This is plan evidence only; the role has not been applied or tested from GitHub Actions yet.
+Tan typed `infra/bootstrap/gha-terraform-plan.tf` on branch `codex/gha-plan-role`. On 29 October 2026, Trunks independently checked formatting and validation, verified the named AWS profile points to account `923988301700`, and ran a live bootstrap plan. The result was **2 to add, 0 to change, 0 to destroy**: one IAM role and one inline policy. [PR #2](https://github.com/Tech-Sayantan/eks-ai-incident-lab/pull/2) passed its static CI check and was squash-merged without a review approval. Tan then ran the local bootstrap apply; a subsequent AWS IAM read confirmed `arn:aws:iam::923988301700:role/eks-ai-incident-lab-gha-plan` exists. The role has not yet been exercised from a GitHub Actions cloud-plan workflow.
 
 ## The concept in plain English
 
@@ -17,7 +17,7 @@ local plan -> PR with static checks -> deliberate merge -> local bootstrap apply
            -> GitHub Actions manual cloud-plan workflow -> verify role and plan
 ```
 
-The role is declared in the bootstrap stack, so a local administrator applies it once. GitHub Actions cannot assume a role that does not exist. Merging the PR only publishes the desired configuration; it does not create the IAM role. The private GitHub Free repository cannot enforce required reviews or checks through branch protection, so Tan must inspect results and choose when to merge.
+The role is declared in the bootstrap stack, so a local administrator applies it once. GitHub Actions cannot assume a role that does not exist. Merging the PR only publishes the desired configuration; it does not create the IAM role. The repository is now public, but `main` has no branch protection rule; Tan must inspect results and choose when to merge until a rule is configured.
 
 ## Production issues and interview answers
 

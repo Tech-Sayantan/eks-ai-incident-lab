@@ -31,13 +31,13 @@ This private repository uses GitHub Free. Required branch protection and require
 
 ```text
 Terraform branch -> PR -> fmt/validate/Trivy (implemented)
-                  -> cloud plan via scoped OIDC role (next)
                   -> review -> merge to main
-                  -> manual dispatch -> fresh plan of main revision
-                  -> apply exactly that plan -> verify AWS and state
+                  -> manual cloud plan from main via scoped OIDC role (next)
+                  -> separate manual apply run with fresh saved plan
+                  -> apply exactly that saved plan -> verify AWS and state
 ```
 
-The future PR planning role needs read access to the relevant AWS resources and narrowly scoped S3 state/lock access. The apply role will be separate and more privileged. The identity-only GitHub OIDC smoke-test role cannot plan or apply. Do not apply a saved PR plan after merge: its source revision or inputs may have changed. A job must bind the approved plan to the exact revision, account, Region and inputs it applies.
+Security refinement on 29 October 2026: Terraform state may contain future database secrets. A PR workflow that checks out proposed code is a weaker trust boundary, so this compact solo lab keeps PR jobs static and runs the AWS-backed plan only from reviewed `main`. The planning role needs read access to the relevant AWS resources and narrowly scoped S3 state/lock access; S3 backend operations may also need write access to the exact state object and lock file. The apply role will be separate and more privileged. The identity-only GitHub OIDC smoke-test role cannot plan or apply. The approved apply plan must be generated from the exact trusted revision, account, Region and inputs it applies.
 
 ## Future Java application delivery
 

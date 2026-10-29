@@ -1,0 +1,67 @@
+name: Apply lab network
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: lab-network-apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    env:
+      TF_VAR_expected_account_id: "923988301700"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.7"
+          terraform_wrapper: false
+
+      - name: Assume AWS apply role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::923988301700:role/eks-ai-incident-lab-gha-apply
+          aws-region: ap-south-1
+          allowed-account-ids: "923988301700"
+
+      - name: Confirm AWS identity
+        run: aws sts get-caller-identity
+
+      - name: Initialize lab backend
+        run: terraform -chdir=infra/live/lab init -input=false -no-color
+
+      - name: Save fresh network plan
+        run: terraform -chdir=infra/live/lab plan -input=false -no-color -lock-timeout=60s -out=network.tfplan
+
+      - name: Require only eight network creations
+        run: |
+          set -euo pipefail
+          terraform -chdir=infra/live/lab show -json network.tfplan |
+            jq -e '
+              [.resource_changes[]
+                | select(.mode == "managed" and .change.actions != ["no-op"])
+              ] as $changes
+              | (($changes | length) == 8
+                 and all($changes[];
+                   .change.actions == ["create"]
+                   and (.address | startswith("module.network."))))
+            '
+
+      - name: Apply saved network plan
+        run: terraform -chdir=infra/live/lab apply -input=false -no-color network.tfplan
+
+      - name: Show network IDs
+        run: terraform -chdir=infra/live/lab output -no-color

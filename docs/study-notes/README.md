@@ -11,7 +11,8 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [05 — GitHub OIDC plan role](05-oidc-plan-role.md) | Trust versus permissions, state access, PR-to-apply order, failure diagnosis |
 | [06 — First AWS network plan and Git](06-network-cloud-plan-and-git.md) | Verified cloud plan, staging, conflicts, cherry-pick, next apply checkpoint |
 | [07 — Protected PR gate and network apply role](07-apply-role-and-merge-gates.md) | PR checks, reviews, merge, deployment gate, applied IAM role |
+| [08 — Network apply and verification](08-network-apply-and-verification.md) | Manual deployment, saved-plan guard, VPC/subnet/route verification, failure diagnosis |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 
-Current status: S3 bootstrap, GitHub OIDC, and Terraform format/validate/Trivy CI are verified. The manual cloud-plan run from `main` proposed eight network additions. `main` now requires a PR and the `check` job. PR #5 passed and merged; Tan applied the network apply IAM role, verified in AWS. The lab VPC and lab state object were absent at the latest check. Network apply is next; no EKS cluster is running.
+Current status: S3 bootstrap, GitHub OIDC, and Terraform format/validate/Trivy CI are verified. `main` requires a PR and the passing `check` job. The network apply IAM role is live. PR #7 merged and its manual apply workflow succeeded; AWS read-back confirmed the lab VPC, two public subnets across AZs, and an Internet Gateway route. Terraform state contains the eight managed network resources. No EKS cluster has been deployed in this checkpoint.

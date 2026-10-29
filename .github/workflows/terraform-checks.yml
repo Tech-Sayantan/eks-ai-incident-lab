@@ -2,10 +2,10 @@ name: Terraform checks
 
 on:
   pull_request:
-    paths:
-      - "infra/**"
-      - ".github/workflows/terraform-checks.yml"
-      - ".github/workflows/network-plan.yml"
+ #   paths:
+  #    - "infra/**"
+   #   - ".github/workflows/terraform-checks.yml"
+    #  - ".github/workflows/network-plan.yml" */
   workflow_dispatch:
 
 permissions:

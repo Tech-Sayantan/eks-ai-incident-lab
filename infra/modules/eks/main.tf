@@ -17,7 +17,8 @@ resource "aws_iam_role_policy_attachment" "cluster" {
 }
 
 # EKS 1.36 encrypts Kubernetes API data by default with an AWS-owned key.
-#trivy:ignore:AVD-AWS-0039
+# Lab exception: the public API is limited to the operator's /32; nodes use private access.
+#trivy:ignore:AVD-AWS-0039 trivy:ignore:AVD-AWS-0040
 resource "aws_eks_cluster" "this" {
   name                          = var.name
   role_arn                      = aws_iam_role.cluster.arn

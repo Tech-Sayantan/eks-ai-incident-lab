@@ -13,7 +13,8 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [07 — Protected PR gate and network apply role](07-apply-role-and-merge-gates.md) | PR checks, reviews, merge, deployment gate, applied IAM role |
 | [08 — Network apply and verification](08-network-apply-and-verification.md) | Manual deployment, saved-plan guard, VPC/subnet/route verification, failure diagnosis |
 | [09 — EKS add-ons](09-eks-addons.md) | VPC CNI, kube-proxy, CoreDNS, managed ownership, dependency order, troubleshooting |
+| [10 — EKS pipeline IAM bootstrap apply](10-eks-iam-bootstrap-apply.md) | Saved-plan guard, scoped GitHub roles, state evidence, failure diagnosis |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 
-Current status: S3 bootstrap, GitHub OIDC, and Terraform format/validate/Trivy CI are verified. `main` requires a PR and the passing `check` job. The network apply IAM role is live. PR #7 merged and its manual apply workflow succeeded; AWS read-back confirmed the lab VPC, two public subnets across AZs, and an Internet Gateway route. Terraform state contains the eight managed network resources. No EKS cluster has been deployed in this checkpoint.
+Current status: S3 bootstrap, GitHub OIDC, and Terraform format/validate/Trivy CI are verified. `main` requires a PR and the passing `check` job. PR #7 merged and its manual apply workflow created the lab VPC, two public subnets across AZs, and an Internet Gateway route. PR #9 merged the EKS configuration and updated workflows; a separate bootstrap apply installed the EKS plan/apply IAM policies. The lab state still contains the network resources. No EKS cluster has been deployed yet.

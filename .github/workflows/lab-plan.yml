@@ -1,4 +1,4 @@
-name: AWS network plan
+name: AWS lab plan
 
 on:
   workflow_dispatch:
@@ -7,13 +7,19 @@ permissions:
   contents: read
   id-token: write
 
+concurrency:
+  group: lab-terraform
+  cancel-in-progress: false
+
 jobs:
   plan:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
     env:
       TF_VAR_expected_account_id: "923988301700"
+      TF_VAR_operator_cidr: ${{ secrets.EKS_OPERATOR_CIDR }}
 
     steps:
       - name: Checkout repository
@@ -23,6 +29,13 @@ jobs:
         uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.15.7"
+
+      - name: Require operator CIDR
+        run: |
+          if [ -z "$TF_VAR_operator_cidr" ]; then
+            echo "::error::Set EKS_OPERATOR_CIDR to your public IPv4/32"
+            exit 1
+          fi
 
       - name: Assume AWS plan role
         uses: aws-actions/configure-aws-credentials@v6.3.0
@@ -37,5 +50,5 @@ jobs:
       - name: Initialize lab backend
         run: terraform -chdir=infra/live/lab init -input=false -no-color
 
-      - name: Preview network changes
+      - name: Preview lab changes
         run: terraform -chdir=infra/live/lab plan -input=false -no-color -lock-timeout=60s

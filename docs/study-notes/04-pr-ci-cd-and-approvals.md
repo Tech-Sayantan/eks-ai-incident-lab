@@ -20,12 +20,18 @@ local branch --git push--> GitHub branch --gh pr create--> pull request
 
 ## CI, review, merge, CD
 
+### Current EKS PR and Terraform delivery pattern
+
+[EKS PR #9](https://github.com/Tech-Sayantan/eks-ai-incident-lab/pull/9) was opened once, on 31 October 2026 at 18:08:51 IST, after the EKS code commit was pushed. Later `git push` commands updated that same PR and reran its checks; they did not create new PRs. Its `check` job runs Terraform formatting/validation and Trivy, without an AWS plan or apply. The new `lab-plan.yml` and `lab-apply.yml` are manual workflows restricted to `main`; they become runnable after merge. A successful PR check is neither a human review nor a cloud deployment.
+
+In real teams, **plan and apply are separate decisions**, but they need not be separate YAML files. One pipeline can have a plan job, approval gate, and apply job; another can plan on a PR and run a guarded apply after merge. Our separate manual plan is a preview. The apply workflow makes a **fresh plan**, checks its 13-create EKS guard, and applies that same saved plan. We do not assume an older preview is still accurate if cloud state or inputs changed. A saved plan contains configuration and input values, so never commit it or expose it as a public artifact. [Terraform planning modes](https://developer.hashicorp.com/terraform/cli/commands/plan), [applying saved plans](https://developer.hashicorp.com/terraform/cli/commands/apply), [GitHub environment approvals](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments).
+
 1. **PR opened or updated:** a `pull_request` workflow runs if its event and path filters match. Reviewers can see the code diff, comments and check results. A review can be submitted before checks finish; a later code change may require another review if the repository enforces stale-review dismissal.
 2. **Approval:** a reviewer submitting `Approve` expresses that the code is ready. Approval does not itself merge. Checks and reviews are independent signals. With suitable branch protection, GitHub can require both before merge. Without that protection, maintainers must enforce the policy manually.
 3. **Merge:** combines the accepted branch into `main`. It changes Git history. It triggers CD only if a workflow or GitOps controller watches the resulting Git event or desired-state change.
 4. **Deployment:** a separate job may build/publish an artifact, update environment configuration, or run a reviewed Terraform plan. A manual `workflow_dispatch` is another possible trigger. Verify the deployed result; a green build is not proof of a healthy environment.
 
-The repository was private on GitHub Free through PR #2, when required branch protection and required environment reviewers were unavailable for that combination. Tan made it public on 29 October 2026. Public visibility does not automatically install branch protection: GitHub's branch-protection API currently reports `main` is unprotected. The lab therefore uses visible PR checks and a deliberate merge decision. Neither PR #1 nor PR #2 had a formal approving review. The connected `Tech-Sayantan` account merged both; a merge is not a review approval.
+The repository was private on GitHub Free through PR #2, when required branch protection and required environment reviewers were unavailable for that combination. Tan made it public on 29 October 2026. Public visibility did not automatically install branch protection. On 31 October, GitHub's branch-protection API reports that `main` requires the `check` job and requires zero human review approvals. Neither PR #1 nor PR #2 had a formal approving review. The connected `Tech-Sayantan` account merged both; a merge is not a review approval.
 
 ## PR #2: what squash actually did
 
@@ -42,12 +48,12 @@ main:     d5457cf -----------> 3f481c7 (both changes)
 ```text
 Terraform branch -> PR -> fmt/validate/Trivy (implemented)
                   -> review -> merge to main
-                  -> manual cloud plan from main via scoped OIDC role (next)
+                  -> manual cloud plan from main via scoped OIDC role (PR #9)
                   -> separate manual apply run with fresh saved plan
                   -> apply exactly that saved plan -> verify AWS and state
 ```
 
-Security refinement on 29 October 2026: Terraform state may contain future database secrets. A PR workflow that checks out proposed code is a weaker trust boundary, so this compact solo lab keeps PR jobs static and runs the AWS-backed plan only from reviewed `main`. The planning role needs read access to the relevant AWS resources and narrowly scoped S3 state/lock access; S3 backend operations may also need write access to the exact state object and lock file. The apply role will be separate and more privileged. The identity-only GitHub OIDC smoke-test role cannot plan or apply. The approved apply plan must be generated from the exact trusted revision, account, Region and inputs it applies.
+Security refinement on 29 October 2026: Terraform state may contain future database secrets. A PR workflow that checks out proposed code is a weaker trust boundary, so this compact solo lab keeps PR jobs static and runs the AWS-backed plan only from `main`. The planning role needs read access to the relevant AWS resources and narrowly scoped S3 state/lock access; S3 backend operations may also need write access to the exact state object and lock file. The apply role is separate and more privileged; PR #9 proposes its EKS policy, which is not yet applied in AWS. The identity-only GitHub OIDC smoke-test role cannot plan or apply. The guarded apply plan must be generated from the exact trusted revision, account, Region and inputs it applies.
 
 ## Future Java application delivery
 

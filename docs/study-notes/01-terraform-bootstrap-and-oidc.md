@@ -23,6 +23,19 @@ The same bootstrap root also creates an IAM OIDC provider for GitHub and a role 
 
 Bootstrap is a dependency problem: the backend bucket cannot host state before it exists. Use local state for the first apply, then migrate it. The bucket can hold the state that describes itself because Terraform created the bucket before switching its state storage.
 
+### State boundaries in this lab
+
+The two **root configurations** use one S3 bucket but different object keys:
+
+| Root | S3 object key | What it owns |
+|---|---|---|
+| `infra/bootstrap` | `eks-ai-incident-lab/bootstrap/terraform.tfstate` | State bucket, GitHub OIDC provider, and CI IAM roles/policies |
+| `infra/live/lab` | `eks-ai-incident-lab/lab/terraform.tfstate` | Lab VPC/network and, after deployment, EKS resources |
+
+Each root has its own backend block and state. The child modules `modules/network` and `modules/eks` contribute resources to the **lab root's** state; they do not make state files of their own. The bootstrap bucket was first created with local state, then `terraform init -migrate-state` copied that state to the bootstrap key. The lab key was written when the network was applied. A PR, `terraform validate`, or a plan does not deploy EKS or add its resources to state. A successful EKS apply will record them in the existing lab key. Both keys use separate temporary `.tflock` objects during locking. [Terraform S3 backend](https://developer.hashicorp.com/terraform/language/backend/s3), [purpose of state](https://developer.hashicorp.com/terraform/language/state/purpose).
+
+**Multiple projects in one AWS account:** Separate states are normal. A shared VPC can have one network state, while each application or cluster has its own state and lifecycle. The states may use different keys in one bucket or separate backends. Give each real resource one Terraform owner; other projects can look up its VPC/subnet IDs through AWS data sources or carefully shared outputs. Splitting state reduces the scope of a mistaken apply but requires explicit dependencies between roots. For this compact lab, network and EKS share one lab state so the cluster can directly reference `module.network.public_subnet_ids`. [Terraform state mapping](https://developer.hashicorp.com/terraform/language/state/purpose), [remote state outputs and access caveat](https://developer.hashicorp.com/terraform/language/state/remote-state-data).
+
 ### OIDC and IAM
 
 ```text

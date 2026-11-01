@@ -10,6 +10,8 @@ The original EKS plan limited the public Kubernetes API endpoint to Tan's curren
 
 This public endpoint is a deliberate **temporary lab exception**. For production, allow only trusted public CIDRs with private access enabled, or use a private-only endpoint and a route into the VPC (for example, VPN or a controlled runner). A private-only endpoint would block `kubectl` from Tan's laptop without that route. Tear down the paid EKS cluster after practice; leaving an open public API reachable indefinitely increases exposure even though authentication remains required.
 
+The first PR check correctly flagged the open public CIDR as Trivy `AWS-0041` (critical). We added a resource-scoped inline exception for that single finding with the reason above; the CI scan remains active for other misconfigurations. A passing scan after this exception would mean the accepted risk was documented, **not** that an internet-wide API is a production recommendation. [Trivy inline ignore syntax](https://www.trivy.dev/docs/latest/scanner/misconfiguration/config/config/).
+
 ## Interview and troubleshooting
 
 **Q: Does `0.0.0.0/0` make the cluster anonymous?** No. It changes network reachability, not IAM authentication or Kubernetes authorization. Explain both gates separately.

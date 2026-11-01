@@ -2,7 +2,7 @@
 
 ## Verified checkpoint (31 October 2026 IST)
 
-Tan typed `infra/modules/eks/addons.tf` with three `aws_eks_addon` resources: `vpc-cni`, `kube-proxy`, and `coredns`. `terraform fmt -check`, `terraform validate`, and `git diff --check` passed. A read-only plan showed 13 creates, no changes, and no destroys for the whole EKS module. AWS `list-clusters` returned an empty list in `ap-south-1`: **the cluster and add-ons are planned, not deployed**. The plan used a documentation-only `/32` IP; a real operator IP is needed before any deployment.
+Tan typed `infra/modules/eks/addons.tf` with three `aws_eks_addon` resources: `vpc-cni`, `kube-proxy`, and `coredns`. `terraform fmt -check`, `terraform validate`, and `git diff --check` passed. A read-only plan showed 13 creates, no changes, and no destroys for the whole EKS module. AWS `list-clusters` returned an empty list in `ap-south-1`: **the cluster and add-ons were planned, not deployed**. That plan used a documentation-only `/32` IP. The later POC decision in [note 11](11-eks-api-access-for-poc.md) replaces this CIDR requirement; this paragraph records the original checkpoint.
 
 ## The mental model
 
@@ -35,7 +35,7 @@ EKS cluster
 
 Once the cluster exists, compare the AWS add-on status with its Kubernetes workload: `aws eks list-addons --cluster-name <name>` and `kubectl -n kube-system get daemonsets,deployments,pods`. If an add-on is degraded, inspect `aws eks describe-addon --cluster-name <name> --addon-name <name>` and the relevant pod events/logs. These are future runtime checks; today's static plan cannot prove pod health.
 
-**PR #9 security-scan example:** Terraform formatting and validation passed, but Trivy reported `AWS-0040` because the Kubernetes API endpoint is public. This lab also enables the private endpoint and restricts public API access to the operator's `/32`; the nodes use the private endpoint. We documented that specific, reviewable lab exception with an inline Trivy ignore on the cluster resource. The PR check then passed. A `/32` restriction narrows who can reach the public endpoint, but it does not make that endpoint private. For a private-only production endpoint, operators and CI need a connected route into the VPC. [AWS endpoint access](https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html), [Trivy inline ignore syntax](https://www.trivy.dev/docs/latest/scanner/misconfiguration/config/config/).
+**PR #9 security-scan example:** Terraform formatting and validation passed, but Trivy reported `AWS-0040` because the Kubernetes API endpoint is public. At that checkpoint, the lab also enabled the private endpoint and restricted public API access to the operator's `/32`; the nodes used the private endpoint. We documented that specific lab exception with an inline Trivy ignore on the cluster resource, and the PR check passed. A later POC change opened the public API to all IPv4 addresses and removed the operator-IP secret; see [note 11](11-eks-api-access-for-poc.md). For a private-only production endpoint, operators and CI need a connected route into the VPC. [AWS endpoint access](https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html), [Trivy inline ignore syntax](https://www.trivy.dev/docs/latest/scanner/misconfiguration/config/config/).
 
 **Q: Is an add-on the same as an EKS node group?** No. A node group supplies EC2 capacity. An add-on supplies shared software that runs on that capacity.
 

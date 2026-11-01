@@ -19,7 +19,6 @@ jobs:
 
     env:
       TF_VAR_expected_account_id: "923988301700"
-      TF_VAR_operator_cidr: ${{ secrets.EKS_OPERATOR_CIDR }}
 
     steps:
       - name: Checkout repository
@@ -30,13 +29,6 @@ jobs:
         with:
           terraform_version: "1.15.7"
           terraform_wrapper: false
-
-      - name: Require operator CIDR
-        run: |
-          if [ -z "$TF_VAR_operator_cidr" ]; then
-            echo "::error::Set EKS_OPERATOR_CIDR to your public IPv4/32"
-            exit 1
-          fi
 
       - name: Assume AWS apply role
         uses: aws-actions/configure-aws-credentials@v6.3.0

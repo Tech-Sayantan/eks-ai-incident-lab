@@ -14,6 +14,7 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [08 — Network apply and verification](08-network-apply-and-verification.md) | Manual deployment, saved-plan guard, VPC/subnet/route verification, failure diagnosis |
 | [09 — EKS add-ons](09-eks-addons.md) | VPC CNI, kube-proxy, CoreDNS, managed ownership, dependency order, troubleshooting |
 | [10 — EKS pipeline IAM bootstrap apply](10-eks-iam-bootstrap-apply.md) | Saved-plan guard, scoped GitHub roles, state evidence, failure diagnosis |
+| [11 — EKS API access for the POC](11-eks-api-access-for-poc.md) | Public endpoint, IAM versus network access, dynamic IPs, production alternatives |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 

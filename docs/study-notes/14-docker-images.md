@@ -45,6 +45,8 @@ The current `.github/workflows/app-ci.yml` has an `images` job on a GitHub-hoste
 
 The images are temporary on the runner: `docker build` alone does not publish them to ECR or prove they start. ECR publishing and a real EKS runtime smoke test are separate checkpoints. This distinction matters in interviews: build success, registry push, Kubernetes scheduling, readiness, and end-to-end HTTP behavior are different evidence.
 
+**Observed checkpoint:** [PR #15](https://github.com/Tech-Sayantan/eks-ai-incident-lab/pull/15) passed `java`, `node`, `images`, and the existing Terraform `check`; it was squash-merged as `95513f1`. The `images` job built both images on GitHub's Ubuntu runner without local Docker Desktop. `main` now requires all four checks with strict up-to-date status. ECR publication and EKS runtime behavior remain unverified.
+
 ## Troubleshooting
 
 | Symptom | Likely cause | First check |

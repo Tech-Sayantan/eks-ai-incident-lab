@@ -118,6 +118,12 @@ resource "aws_iam_role_policy" "gha_eks_apply" {
         ]
       },
       {
+        Sid      = "ReadEksNodegroupServiceLinkedRole"
+        Effect   = "Allow"
+        Action   = ["iam:GetRole"]
+        Resource = "arn:aws:iam::${var.expected_account_id}:role/aws-service-role/eks-nodegroup.amazonaws.com/AWSServiceRoleForAmazonEKSNodegroup"
+      },
+      {
         Sid      = "ReadSecurityGroups"
         Effect   = "Allow"
         Action   = ["ec2:DescribeSecurityGroups"]

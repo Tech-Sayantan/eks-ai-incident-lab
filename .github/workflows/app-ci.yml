@@ -1,0 +1,49 @@
+name: Application CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  java:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+          cache-dependency-path: apps/orders-api/pom.xml
+      - name: Test Java and Checkstyle
+        working-directory: apps/orders-api
+        run: ./mvnw -B -ntp verify
+
+  node:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/payment-simulator/package-lock.json
+      - name: Install exact dependencies
+        working-directory: apps/payment-simulator
+        run: npm ci
+      - name: Test Node
+        working-directory: apps/payment-simulator
+        run: npm test
+
+  images:
+    needs: [java, node]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build Java image
+        run: docker build -t orders-api:ci apps/orders-api
+      - name: Build Node image
+        run: docker build -t payment-simulator:ci apps/payment-simulator

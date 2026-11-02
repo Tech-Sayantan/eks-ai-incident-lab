@@ -10,3 +10,6 @@ crash.*.log
 
 /outputs/
 /work/
+/apps/**/target/
+/apps/**/node_modules/
+/apps/**/coverage/

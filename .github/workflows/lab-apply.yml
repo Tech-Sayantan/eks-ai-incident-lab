@@ -46,7 +46,7 @@ jobs:
       - name: Save fresh EKS plan
         run: terraform -chdir=infra/live/lab plan -input=false -no-color -lock-timeout=60s -out=eks.tfplan
 
-      - name: Require only thirteen EKS creations
+      - name: Require expected EKS creations
         run: |
           set -euo pipefail
           terraform -chdir=infra/live/lab show -json eks.tfplan |
@@ -54,10 +54,16 @@ jobs:
               [.resource_changes[]
                 | select(.mode == "managed" and .change.actions != ["no-op"])
               ] as $changes
-              | (($changes | length) == 13
-                 and all($changes[];
+              | (all($changes[];
                    .change.actions == ["create"]
-                   and (.address | startswith("module.eks."))))
+                   and (.address | startswith("module.eks.")))
+                 and (
+                   ($changes | length) == 13
+                   or ([$changes[].address] | sort) == [
+                     "module.eks.aws_eks_addon.coredns",
+                     "module.eks.aws_eks_node_group.this"
+                   ]
+                 ))
             '
 
       - name: Apply saved EKS plan

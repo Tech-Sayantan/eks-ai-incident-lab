@@ -18,6 +18,7 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [12 — Partial EKS apply recovery](12-eks-partial-apply-recovery.md) | Service-linked roles, partial state, exact recovery plan, cost and retry checks |
 | [13 — Application foundations](13-application-foundations.md) | Java/Maven, Node.js, Dockerfiles, idempotency, timeouts, probes, failure scenarios |
 | [14 — Docker images](14-docker-images.md) | Image stages, build context/cache, image versus runtime size, Kubernetes resources, CI build and troubleshooting |
+| [15 — ECR repositories and IAM](15-ecr-repositories-and-iam.md) | Separate Terraform states and roles, scoped ECR permissions, delivery order, failures and interview answers |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 

@@ -2,7 +2,11 @@
 
 ## What this checkpoint proves
 
-Tan typed `infra/live/lab/ecr.tf` with two private ECR repositories and `infra/bootstrap/gha-ecr.tf` with separate permissions for the GitHub Terraform plan and apply roles. Both Terraform roots returned `Success! The configuration is valid.` and both new files passed `terraform fmt -check`. This is **static validation only**: no IAM policy or ECR repository has been applied to AWS yet.
+Tan typed `infra/live/lab/ecr.tf` with two private ECR repositories and `infra/bootstrap/gha-ecr.tf` with separate permissions for the GitHub Terraform plan and apply roles. Both Terraform roots returned `Success! The configuration is valid.` and both new files passed `terraform fmt -check`. [PR #17](https://github.com/Tech-Sayantan/eks-ai-incident-lab/pull/17) passed all four required checks and merged. CI validated the code; it did not apply AWS resources.
+
+**Observed bootstrap apply:** A fresh saved plan, run as the named non-root `eks-lab-admin` identity in account `923988301700`, showed exactly two IAM policy creates, no changes, and no destroys. A JSON guard verified the exact resource addresses, create actions, and two ECR repository ARNs. Applying that saved plan returned **2 added, 0 changed, 0 destroyed**. IAM read-back showed the plan role's two read actions and the apply role's eight repository actions; bootstrap state lists both new policy resources. Saved plans were removed afterward. This installed permissions only: neither ECR repository exists yet.
+
+The ECR registry in `ap-south-1` reported `BASIC` scanning. Read-only `DescribeRepositories` calls returned `RepositoryNotFoundException` for both planned repository names before any ECR apply.
 
 ## Ownership and why two states matter
 
@@ -17,9 +21,9 @@ The repository names are `eks-ai-incident-lab/orders-api` and `eks-ai-incident-l
 
 ## Delivery sequence
 
-1. Merge the reviewed Terraform code after required PR checks pass.
-2. Plan the **bootstrap** root and accept only two new IAM policy resources; apply that exact plan and read back both installed policies.
-3. Update the lab plan/apply workflow guard for exactly two ECR repository creates; run a fresh lab plan, inspect it, and apply it.
+1. **Done:** Merge the reviewed Terraform code after required PR checks pass.
+2. **Done:** Plan the **bootstrap** root and accept only two new IAM policy resources; apply that exact plan and read back both installed policies.
+3. **Next:** Update the lab plan/apply workflow guard for exactly two ECR repository creates; run a fresh lab plan, inspect it, and apply it.
 4. Verify the two ECR repositories through the ECR API. Only then add the image publisher role and CI push.
 
 ## Real-world failures and interview answers

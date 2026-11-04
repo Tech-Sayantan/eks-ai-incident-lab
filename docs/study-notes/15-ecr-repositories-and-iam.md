@@ -23,8 +23,8 @@ The repository names are `eks-ai-incident-lab/orders-api` and `eks-ai-incident-l
 
 1. **Done:** Merge the reviewed Terraform code after required PR checks pass.
 2. **Done:** Plan the **bootstrap** root and accept only two new IAM policy resources; apply that exact plan and read back both installed policies.
-3. **Next:** Update the lab plan/apply workflow guard for exactly two ECR repository creates; run a fresh lab plan, inspect it, and apply it.
-4. Verify the two ECR repositories through the ECR API. Only then add the image publisher role and CI push.
+3. **Done:** Add a separate manual lab workflow guarded for exactly two ECR repository creates; run a fresh plan and apply the saved plan. See [note 16](16-guarded-ecr-apply.md).
+4. **Done:** Verify both repositories through the ECR API. Next, add the image publisher role and CI push.
 
 ## Real-world failures and interview answers
 

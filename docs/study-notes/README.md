@@ -22,6 +22,7 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [16 — Guarded ECR apply](16-guarded-ecr-apply.md) | Saved-plan guard, OIDC apply, AWS read-back, PR versus deployment, troubleshooting and interview answers |
 | [17 — Image publisher OIDC](17-image-publisher-oidc.md) | Dedicated CI role, trust versus permissions, scoped ECR push, synced-folder failure and interview answers |
 | [18 — Image publishing](18-image-publishing.md) | Verified Trivy/OIDC/ECR publication, digests, CI versus promotion, pull permissions and troubleshooting |
+| [19 — Kubernetes resources and dry run](19-kubernetes-resources-and-dry-run.md) | Client/API model, dry-run limits, controllers, Services/DNS, configuration, resources, probes, incident diagnosis and Helm progression |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 

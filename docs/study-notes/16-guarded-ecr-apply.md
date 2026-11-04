@@ -18,7 +18,7 @@ The repositories exist but contain no application images yet. The **lab Terrafor
 `PR checks → merge → manual workflow → temporary OIDC credentials → fresh Terraform plan → exact-change guard → saved-plan apply → AWS read-back`
 
 - **PR checks** proved the code passed tests and static checks. They did not deploy anything.
-- **Merge** placed the approved workflow on `main`; the workflow is restricted to that branch.
+- **Merge** placed the workflow on `main`; the workflow is restricted to that branch. All four checks passed, but this one-owner lab had no separate human review approval.
 - **OIDC** let GitHub request short-lived AWS credentials for the apply role. No AWS access key was stored in GitHub.
 - **Plan** asked Terraform what the current AWS state and configuration require.
 - **Guard** rejected any result other than the two expected repository creations. This catches unexpected drift or a changed PR before the apply step.

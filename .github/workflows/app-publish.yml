@@ -1,0 +1,107 @@
+name: Publish application images
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/**"
+      - ".github/workflows/app-publish.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: app-image-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Build both images
+        run: |
+          docker build -t orders-api:ci apps/orders-api
+          docker build -t payment-simulator:ci apps/payment-simulator
+
+      - name: Scan Orders API image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: orders-api:ci
+          severity: CRITICAL
+          ignore-unfixed: "true"
+          exit-code: "1"
+
+      - name: Scan payment simulator image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: payment-simulator:ci
+          severity: CRITICAL
+          ignore-unfixed: "true"
+          exit-code: "1"
+
+      - name: Assume image publisher role
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::923988301700:role/eks-ai-incident-lab-gha-image-publish
+          aws-region: ap-south-1
+          allowed-account-ids: "923988301700"
+
+      - name: Log in to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push both images
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+
+          docker tag orders-api:ci \
+            "$REGISTRY/eks-ai-incident-lab/orders-api:$IMAGE_TAG"
+          docker tag payment-simulator:ci \
+            "$REGISTRY/eks-ai-incident-lab/payment-simulator:$IMAGE_TAG"
+
+          docker push "$REGISTRY/eks-ai-incident-lab/orders-api:$IMAGE_TAG"
+          docker push "$REGISTRY/eks-ai-incident-lab/payment-simulator:$IMAGE_TAG"
+
+      - name: Record immutable digests
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+
+          orders_digest=$(aws ecr describe-images \
+            --repository-name eks-ai-incident-lab/orders-api \
+            --image-ids imageTag="$IMAGE_TAG" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)
+
+          payment_digest=$(aws ecr describe-images \
+            --repository-name eks-ai-incident-lab/payment-simulator \
+            --image-ids imageTag="$IMAGE_TAG" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)
+
+          test "$orders_digest" != "None"
+          test "$payment_digest" != "None"
+
+          printf 'Orders API: %s/eks-ai-incident-lab/orders-api@%s\n' \
+            "$REGISTRY" "$orders_digest" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Payment simulator: %s/eks-ai-incident-lab/payment-simulator@%s\n' \
+            "$REGISTRY" "$payment_digest" >> "$GITHUB_STEP_SUMMARY"

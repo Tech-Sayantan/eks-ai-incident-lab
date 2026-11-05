@@ -16,6 +16,8 @@ See the Java Orders API call the Node payment simulator on EKS, with Argo CD man
 
 ## 1. Preflight and merge
 
+Review current AWS charges, credit balance, and billing-data lag before starting the deployment checkpoint. Account-specific billing balances stay out of this public repository. Refresh the named IAM profile if expired and confirm the expected non-root identity.
+
 Tan follows these commands in the local checkout:
 
 ```bash
@@ -31,7 +33,7 @@ Trunks verifies the current PR and cluster, handles routine Git recovery if need
 
 ## 2. Bootstrap Argo CD
 
-Provide the full commands in chat before Tan runs them. Verify and pin a suitable Argo CD release, use its non-HA installation for this small lab, and check node memory/CPU requests and Pod slots before scheduling the additional components. Explain application controller, repo server, API/UI server and their responsibilities. Keep UI access through local port forwarding for this checkpoint.
+Provide the full commands in chat before Tan runs them. The prepared release is [Argo CD v3.6.1](https://github.com/argoproj/argo-cd/releases/tag/v3.6.1); the [official compatibility table](https://argo-cd.readthedocs.io/en/stable/operator-manual/tested-kubernetes-versions/) includes Kubernetes 1.36 for Argo CD 3.6. Use its self-managed non-HA installation on the existing node, and check node memory/CPU requests and Pod slots before scheduling the additional components. Explain application controller, repo server, API/UI server and their responsibilities. Keep UI access through local port forwarding for this checkpoint.
 
 Inspect the installation's RBAC scope and explain why bootstrap permissions differ from application runtime permissions. Verify Argo Pods become ready. Any generated login credential is retrieved locally when needed and stays out of Git/study notes.
 

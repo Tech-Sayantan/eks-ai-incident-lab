@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orders-lab
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders-config
+  namespace: orders-lab
+data:
+  PAYMENT_BASE_URL: "http://payment-simulator:3000"
+  PAYMENT_TIMEOUT_MS: "1500"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-simulator
+  namespace: orders-lab
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: payment-simulator
+  template:
+    metadata:
+      labels:
+        app: payment-simulator
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: payment-simulator
+          image: 923988301700.dkr.ecr.ap-south-1.amazonaws.com/eks-ai-incident-lab/payment-simulator@sha256:d84619c025f0a89226daf4a4c31e5b46bf6ec0f1012fad76e7e6543242cc5738
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-simulator
+  namespace: orders-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: payment-simulator
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+  namespace: orders-lab
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: orders-api
+  template:
+    metadata:
+      labels:
+        app: orders-api
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: orders-api
+          image: 923988301700.dkr.ecr.ap-south-1.amazonaws.com/eks-ai-incident-lab/orders-api@sha256:2bbe7bfbe73f14885f18f18c0e8f4d7aa84f22548953b2b09eee5850c78fc5fd
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: orders-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api
+  namespace: orders-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

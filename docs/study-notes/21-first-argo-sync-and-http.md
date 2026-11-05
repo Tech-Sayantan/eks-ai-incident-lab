@@ -2,7 +2,9 @@
 
 ## Verified evidence
 
-Tan typed `gitops/argocd/orders-lab.yaml`, registered the Application, and performed the first UI sync. Independent read-back reported sync `Synced`, health `Healthy`, and operation `Succeeded`. Both app Deployments have one available replica; both Pods are Running, 1/1 Ready, with zero restarts. Both Services have EndpointSlice addresses. Read-only HTTP tests from inside the payment Pod to `http://orders-api:8080/actuator/health/readiness` and `http://payment-simulator:3000/health/ready` returned 200 and UP. This exercised internal Service-name discovery and routing for those requests. An actual order transaction is the next user-run check and is not yet claimed here.
+Tan typed `gitops/argocd/orders-lab.yaml`, registered the Application, and performed the first UI sync. Independent read-back reported sync `Synced`, health `Healthy`, and operation `Succeeded`. Both app Deployments have one available replica; both Pods are Running, 1/1 Ready, with zero restarts. Both Services have EndpointSlice addresses. Read-only HTTP tests from inside the payment Pod to `http://orders-api:8080/actuator/health/readiness` and `http://payment-simulator:3000/health/ready` returned 200 and UP. This exercised internal Service-name discovery and routing for those requests.
+
+Tan then performed the order exercise. Java's `order confirmed` log and Node's successful payment-authorization log share request ID `tan-eks-order-01` and order ID `1d35792d-3dbd-45f2-bec1-e810f6d819fb`. Trunks independently repeated the POST with the same key/body: HTTP 200 returned that same CONFIRMED order. GET of that order also returned HTTP 200 and identical order content. A payment-log check after the repeat found exactly one authorization for that request ID. The original first-create curl status was not captured independently, so HTTP 201 remains the expected first-create behavior rather than a claimed observed response. Both Pods still had zero restarts at verification.
 
 ## The Sync dialog options
 
@@ -54,4 +56,4 @@ Find the correlated request ID in both services. On the repeat, the in-memory id
 
 Port forwarding reaches a selected Java Pod through the Kubernetes API path. Its outgoing payment call still uses the payment Service in the cluster. The laptop-to-Java test does not establish an external Ingress route; that is a separate checkpoint.
 
-If the request fails, keep its HTTP status/body and inspect the corresponding request ID and Pod events before changing configuration. 201/200, correlated payment logs and repeat behavior are the expected evidence to append after Tan completes this step.
+If the request fails, keep its HTTP status/body and inspect the corresponding request ID and Pod events before changing configuration. The observed confirmation, replay/GET results and payment-log evidence are recorded above. The controlled payment-timeout exercise is deferred to the next session.

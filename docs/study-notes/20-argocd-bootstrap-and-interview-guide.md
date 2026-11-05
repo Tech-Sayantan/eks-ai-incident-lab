@@ -2,13 +2,15 @@
 
 ## Checkpoint status
 
-**Prepared for Tan to run; installation is not yet verified.** PR #24 merged as `c58517c`, placing the application manifests on `main`. Trunks verified the named AWS profile as `arn:aws:iam::923988301700:user/eks-lab-admin`, the EKS node as Ready, and four healthy system Pods. Neither `argocd` nor `orders-lab` exists at this preflight. The node allows 17 Pods. Kubelet statistics showed 3433 MiB available node memory at the observation time; this is a snapshot, not a capacity guarantee.
+**Installation verified after Tan ran the commands.** All six Argo Deployments and the application-controller StatefulSet report ready instances. All seven Argo Pods are Running, Ready, and have zero restarts at verification. Services are internal ClusterIP Services. No Argo Applications exist yet, and `orders-lab` is absent. UI login and the first app deployment remain to be completed.
+
+Pre-install evidence: PR #24 merged as `c58517c`, placing the application manifests on `main`. Trunks verified the named AWS profile as `arn:aws:iam::923988301700:user/eks-lab-admin`, the EKS node as Ready, and four healthy system Pods. The node allows 17 Pods. Kubelet statistics showed 3433 MiB available node memory at that preflight; this was a snapshot, not a capacity guarantee.
 
 The reviewed Argo CD v3.6.1 non-HA install contains six single-replica Deployments and one single-replica StatefulSet. Four system Pods plus seven Argo Pods plus two future app Pods gives 13 steady-state Pods; rollouts may need additional slots. The upstream containers do not set CPU/memory requests or limits. Production sizing must measure actual use and set resource policy; a successful scheduling attempt alone does not establish memory safety.
 
 ## How each lesson will work
 
-Every topic uses this pattern: business/operations problem → architecture and identities → complete user-typed code/commands → explanation of the important fields → expected evidence → realistic failures and diagnostic commands → production tradeoffs → scenario interview answers. Implementation remains compact while the notes explain the reasoning. Study questions include what to inspect, why that evidence matters, what to change, and how to prove recovery.
+Every topic starts with a brief purpose and a small hands-on action, then observes its result before expanding into architecture, failure diagnosis, production tradeoffs and interview reasoning. For Argo, first open its UI, connect the app, and observe a sync. The deeper reference material below supports that experience. Supply complete user-typed commands and explain the fields at the point of use. Avoid introducing scenario questions before the tool's basic use is understood.
 
 ## Why add a continuous delivery controller?
 

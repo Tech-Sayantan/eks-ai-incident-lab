@@ -2,7 +2,7 @@
 
 ## Checkpoint status
 
-**Installation verified after Tan ran the commands.** All six Argo Deployments and the application-controller StatefulSet report ready instances. All seven Argo Pods are Running, Ready, and have zero restarts at verification. Services are internal ClusterIP Services. No Argo Applications exist yet, and `orders-lab` is absent. UI login and the first app deployment remain to be completed.
+**Installation and UI login verified.** All six Argo Deployments and the application-controller StatefulSet report ready instances. All seven Argo Pods are Running, Ready, and have zero restarts at verification. Services are internal ClusterIP Services. Tan confirmed UI login after copying the exact password. No Argo Applications exist yet, and `orders-lab` is absent; the first app deployment remains to be completed.
 
 Pre-install evidence: PR #24 merged as `c58517c`, placing the application manifests on `main`. Trunks verified the named AWS profile as `arn:aws:iam::923988301700:user/eks-lab-admin`, the EKS node as Ready, and four healthy system Pods. The node allows 17 Pods. Kubelet statistics showed 3433 MiB available node memory at that preflight; this was a snapshot, not a capacity guarantee.
 
@@ -88,7 +88,7 @@ kubectl -n argocd get secret argocd-initial-admin-secret \
   -o jsonpath='{.data.password}' | base64 --decode | pbcopy
 ```
 
-On `https://localhost:8081`, enter username `admin` and paste the clipboard value into the password field. This does not change the password. Avoid repeated failed attempts; Argo has failed-login protection. Successful API authentication and a successful UI login are separate observations; UI login is still awaiting Tan's confirmation.
+On `https://localhost:8081`, enter username `admin` and paste the clipboard value into the password field. This does not change the password. Avoid repeated failed attempts; Argo has failed-login protection. Successful API authentication and a successful UI login are separate observations; Tan subsequently confirmed the UI login succeeded.
 
 An Application declares a source repository/revision/path and a destination cluster/namespace. Our next file will live outside `gitops/apps`, so the app's first watched directory does not include its own bootstrap definition. The public repository needs no Git read credential. Same-cluster deployment needs no separate `argocd cluster add` step.
 

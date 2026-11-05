@@ -79,6 +79,17 @@ The installed local Argo CLI is v2.12.3, substantially older than server v3.6.1.
 
 ## Reading desired state, sync state and health
 
+### First UI login: avoid copying the shell marker
+
+The local `8081:443` port forward was verified against the healthy Argo server. After the UI reported invalid credentials, Trunks tested `admin` with the stored initial password against `/api/v1/session`: HTTP 200, with neither password nor returned token printed or saved. The stored credential is valid. A likely copy issue is the zsh end-of-line `%` marker shown after a command prints text without a trailing newline. Copy the exact credential directly to the Mac clipboard instead:
+
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath='{.data.password}' | base64 --decode | pbcopy
+```
+
+On `https://localhost:8081`, enter username `admin` and paste the clipboard value into the password field. This does not change the password. Avoid repeated failed attempts; Argo has failed-login protection. Successful API authentication and a successful UI login are separate observations; UI login is still awaiting Tan's confirmation.
+
 An Application declares a source repository/revision/path and a destination cluster/namespace. Our next file will live outside `gitops/apps`, so the app's first watched directory does not include its own bootstrap definition. The public repository needs no Git read credential. Same-cluster deployment needs no separate `argocd cluster add` step.
 
 We will use a dedicated AppProject to allow this source repository, the intended destination and permitted resource kinds. Project rules complement the controller's Kubernetes RBAC; they do not reduce the permissions of its cluster-admin ServiceAccount. Protect who can change AppProjects and Application definitions.

@@ -2,6 +2,8 @@
 
 ## Status
 
+Deferred at Tan's request on 6 November 2026 to prioritize Helm and application delivery. The commands below are optional reference; this exercise is not a prerequisite for the next checkpoint and has not been executed.
+
 Prepared for Tan's next hands-on exercise. The controlled timeout has not yet been observed or claimed as completed. Previous verified runtime and first-order results are in note 21. Refresh the named AWS login and live cluster health before this exercise.
 
 Baseline verified on 6 November 2026: the named CLI profile is using the lab IAM user; EKS is ACTIVE; the single node is Ready; all 13 Pods are Running with zero restarts. Argo reports Synced, Healthy and Succeeded at revision `9e677e7`. Both application readiness URLs returned HTTP 200 with `status: UP` through their in-cluster Service names. This verifies the baseline, not the controlled timeout below.

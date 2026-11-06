@@ -1,4 +1,4 @@
-# Next session — a controlled incident, then Helm
+# Next session — Helm conversion, then GitOps delivery
 
 ## Completed and verified
 
@@ -13,11 +13,11 @@
 ## Next hands-on sequence
 
 1. Refresh the named IAM login if needed. Verify the correct cluster, node, app Pods and Argo Application before changes.
-2. Reopen local port forwards only when needed. Reproduce the controlled payment timeout with a fresh idempotency key and request ID.
-3. Observe Java returning 504 while Pod readiness and Argo health can remain green. Trace the same request through both logs and explain 1500 ms caller timeout versus 3000 ms simulated downstream delay.
-4. Discuss the incident from the evidence: latency, timeout budgets, uncertain downstream outcomes, and durable idempotency. Change one thing at a time and verify the successful request path afterward.
-5. Convert the existing working resources into one small Helm chart, typed by Tan from full code provided in chat. Cover Chart.yaml, values.yaml, templates, lint/render validation, pinned digests and configuration checksums.
-6. Review the rendered Kubernetes objects before changing the Argo source to the chart. Keep Argo as the workload lifecycle owner. Record the observed rollout and HTTP results.
+2. The controlled timeout exercise is deferred at Tan's request. Move directly to the Helm conversion in study note 23.
+3. Tan creates Chart.yaml and values.yaml, copies the working manifest to templates/resources.yaml and replaces the six blocks supplied in chat. Preserve resource names, namespaces, selectors, probes and image digests.
+4. Run Helm lint and template locally; inspect the rendered objects and configuration checksum. This is preparation, not deployment.
+5. After Tan returns the results, add Helm validation to PR CI, review the diff, and merge through the existing checks. Change the existing Argo Application source path to the chart with a reviewed, explicit Application update; that Application is not itself currently managed by a parent Argo app.
+6. Use the existing manual Argo sync and verify the rollout, Services and an actual order request. A first checksum annotation changes the Java Pod template and causes a Recreate restart; explain the brief outage and loss of in-memory orders before syncing. Keep Argo as the workload lifecycle owner; do not run helm install against these resources.
 
 ## Teaching order
 

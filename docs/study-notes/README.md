@@ -26,6 +26,7 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [20 — Argo CD bootstrap and interviews](20-argocd-bootstrap-and-interview-guide.md) | User-run installation, architecture, RBAC, sync/health, daily operations, troubleshooting and senior scenario answers |
 | [21 — First Argo sync and HTTP](21-first-argo-sync-and-http.md) | Verified sync and internal routing, Prune/Dry Run/Force, ownership of health checks, first-order exercise |
 | [22 — Payment timeout investigation](22-payment-timeout-investigation.md) | Prepared user-run slow-request exercise, HTTP versus probe health, timeout budgets and evidence limits |
+| [23 — Helm conversion](23-helm-conversion.md) | User-typed chart, values and templates, config checksum, rendering versus deployment, GitOps migration and interview reasoning |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 

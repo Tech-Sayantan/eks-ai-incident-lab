@@ -14,9 +14,9 @@
 
 1. Refresh the named IAM login if needed. Verify the correct cluster, node, app Pods and Argo Application before changes.
 2. The controlled timeout exercise is deferred at Tan's request. Move directly to the Helm conversion in study note 23.
-3. Tan creates Chart.yaml and values.yaml, copies the working manifest to templates/resources.yaml and replaces the six blocks supplied in chat. Preserve resource names, namespaces, selectors, probes and image digests.
-4. Run Helm lint and template locally; inspect the rendered objects and configuration checksum. This is preparation, not deployment.
-5. After Tan returns the results, add Helm validation to PR CI, review the diff, and merge through the existing checks. Change the existing Argo Application source path to the chart with a reviewed, explicit Application update; that Application is not itself currently managed by a parent Argo app.
+3. Tan already created the three chart files and most substitutions. At Tan's explicit request, Trunks completed the Java Pod-template checksum and normalized final newlines. Actual chart lint/render passed; all six resources retain the original semantics except the intentional checksum annotation. A string timeout override changed both configuration and hash.
+4. Trunks added Helm 4.2.2 strict lint/render steps to the existing required images CI job. Review the chart and learn the Helm concepts from note 23; run the supplied local commands to observe rendering and values precedence. This is preparation, not deployment.
+5. Review the PR and passing checks, then merge through the existing gates. Change the existing Argo Application source path to the chart with a reviewed, explicit Application update; that Application is not itself currently managed by a parent Argo app. Its source path has not been changed in this checkpoint.
 6. Use the existing manual Argo sync and verify the rollout, Services and an actual order request. A first checksum annotation changes the Java Pod template and causes a Recreate restart; explain the brief outage and loss of in-memory orders before syncing. Keep Argo as the workload lifecycle owner; do not run helm install against these resources.
 
 ## Teaching order

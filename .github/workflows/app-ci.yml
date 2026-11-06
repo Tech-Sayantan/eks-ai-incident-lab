@@ -43,6 +43,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      - name: Set up Helm
+        uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v4.2.2
+      - name: Validate application chart
+        run: |
+          helm lint --strict gitops/charts/orders-lab
+          helm template orders-lab gitops/charts/orders-lab \
+            --namespace orders-lab --kube-version 1.36.0 \
+            > /tmp/orders-lab-rendered.yaml
       - name: Build Java image
         run: docker build -t orders-api:ci apps/orders-api
       - name: Build Node image

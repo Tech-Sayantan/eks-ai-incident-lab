@@ -4,6 +4,8 @@
 
 Prepared for Tan's next hands-on exercise. The controlled timeout has not yet been observed or claimed as completed. Previous verified runtime and first-order results are in note 21. Refresh the named AWS login and live cluster health before this exercise.
 
+Baseline verified on 6 November 2026: the named CLI profile is using the lab IAM user; EKS is ACTIVE; the single node is Ready; all 13 Pods are Running with zero restarts. Argo reports Synced, Healthy and Succeeded at revision `9e677e7`. Both application readiness URLs returned HTTP 200 with `status: UP` through their in-cluster Service names. This verifies the baseline, not the controlled timeout below.
+
 ## Goal
 
 See one order request fail because payment responds too slowly, then inspect what Kubernetes and Argo report. The fault mode belongs to this single request; it does not change the Deployment or globally break the payment process.

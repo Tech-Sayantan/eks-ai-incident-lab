@@ -46,16 +46,3 @@ resource "aws_route53_record" "certificate_validation" {
   ttl     = 300
   records = [local.certificate_dns.resource_record_value]
 }
-
-resource "aws_route53_record" "orders_alias" {
-  zone_id = aws_route53_zone.orders.zone_id
-  name    = local.orders_domain
-  type    = "A"
-
-  # The AWS Load Balancer Controller owns this ALB.
-  alias {
-    name                   = "k8s-ordersla-ordersap-613c362ac3-2141733110.ap-south-1.elb.amazonaws.com"
-    zone_id                = "ZP97RAFLXTNZK"
-    evaluate_target_health = true
-  }
-}

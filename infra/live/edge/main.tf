@@ -15,13 +15,7 @@ provider "aws" {
 }
 
 locals {
-  orders_domain   = "orders.tanscape.online"
-  certificate_dns = one(aws_acm_certificate.orders.domain_validation_options)
-}
-
-resource "aws_route53_zone" "orders" {
-  name    = local.orders_domain
-  comment = "orders.tanscape.online POC"
+  orders_domain = "orders.tanscape.online"
 }
 
 resource "aws_acm_certificate" "orders" {
@@ -37,12 +31,4 @@ resource "aws_acm_certificate" "orders" {
   tags = {
     Project = "eks-ai-incident-lab"
   }
-}
-
-resource "aws_route53_record" "certificate_validation" {
-  zone_id = aws_route53_zone.orders.zone_id
-  name    = local.certificate_dns.resource_record_name
-  type    = local.certificate_dns.resource_record_type
-  ttl     = 300
-  records = [local.certificate_dns.resource_record_value]
 }

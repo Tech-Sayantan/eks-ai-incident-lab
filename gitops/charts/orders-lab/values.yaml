@@ -8,3 +8,8 @@ orders:
 payment:
   replicas: 1
   image: "923988301700.dkr.ecr.ap-south-1.amazonaws.com/eks-ai-incident-lab/payment-simulator@sha256:d84619c025f0a89226daf4a4c31e5b46bf6ec0f1012fad76e7e6543242cc5738"
+
+ingress:
+  enabled: true
+  host: orders.tanscape.online
+  certificateArn: "arn:aws:acm:ap-south-1:923988301700:certificate/afbe219e-40f6-4933-bcf8-7b9ed6c095c0"

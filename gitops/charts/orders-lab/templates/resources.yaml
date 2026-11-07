@@ -1,0 +1,139 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: orders-lab
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: orders-config
+  namespace: orders-lab
+data: {{ toYaml .Values.orders.config | nindent 2 }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-simulator
+  namespace: orders-lab
+spec:
+  replicas: {{ .Values.payment.replicas }}
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: payment-simulator
+  template:
+    metadata:
+      labels:
+        app: payment-simulator
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: payment-simulator
+          image: {{ .Values.payment.image | quote }}
+          ports:
+            - name: http
+              containerPort: 3000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-simulator
+  namespace: orders-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: payment-simulator
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+  namespace: orders-lab
+spec:
+  replicas: {{ .Values.orders.replicas }}
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: orders-api
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ .Values.orders.config | toJson | sha256sum | quote }}
+      labels:
+        app: orders-api
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: orders-api
+          image: {{ .Values.orders.image | quote }}
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: orders-config
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+            timeoutSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-api
+  namespace: orders-lab
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

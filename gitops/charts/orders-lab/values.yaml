@@ -1,0 +1,10 @@
+orders:
+  replicas: 1
+  image: "923988301700.dkr.ecr.ap-south-1.amazonaws.com/eks-ai-incident-lab/orders-api@sha256:2bbe7bfbe73f14885f18f18c0e8f4d7aa84f22548953b2b09eee5850c78fc5fd"
+  config:
+    PAYMENT_BASE_URL: "http://payment-simulator:3000"
+    PAYMENT_TIMEOUT_MS: "1500"
+
+payment:
+  replicas: 1
+  image: "923988301700.dkr.ecr.ap-south-1.amazonaws.com/eks-ai-incident-lab/payment-simulator@sha256:d84619c025f0a89226daf4a4c31e5b46bf6ec0f1012fad76e7e6543242cc5738"

@@ -5,11 +5,12 @@ metadata:
   namespace: argocd
 spec:
   project: default
+  
 
   source:
     repoURL: https://github.com/Tech-Sayantan/eks-ai-incident-lab.git
     targetRevision: main
-    path: gitops/apps
+    path: gitops/charts/orders-lab
 
   destination:
     server: https://kubernetes.default.svc

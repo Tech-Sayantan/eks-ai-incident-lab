@@ -1,4 +1,4 @@
-# Next session — Helm conversion, then GitOps delivery
+# Next session — see when the public endpoint needs attention
 
 ## Completed and verified
 
@@ -9,15 +9,16 @@
 - Java confirmed Tan's order and the payment service logged a matching successful authorization.
 - Independent repeat POST and GET returned HTTP 200 for the same CONFIRMED order; the correlated payment authorization count remained one.
 - Original first-create HTTP 201 was expected but not independently captured. The observed results are in study note 21.
+- PR #26 switched the Application to the Helm chart. The existing Application was explicitly updated and synced.
+- PR #27 added the readiness Ingress. Argo synced `b4c9008`, the ALB registered a healthy Java target on port 8080, and the Route 53 A Alias resolved to it.
+- A public HTTPS request returned HTTP 200 with `{"status":"UP"}`. HTTP redirected to HTTPS with 301. See [note 24](study-notes/24-ingress-dns-and-https.md) for the failure and recovery and [note 25](study-notes/25-interview-and-troubleshooting-review.md) for the cumulative review.
 
 ## Next hands-on sequence
 
-1. Refresh the named IAM login if needed. Verify the correct cluster, node, app Pods and Argo Application before changes.
-2. The controlled timeout exercise is deferred at Tan's request. Move directly to the Helm conversion in study note 23.
-3. Tan already created the three chart files and most substitutions. At Tan's explicit request, Trunks completed the Java Pod-template checksum and normalized final newlines. Actual chart lint/render passed; all six resources retain the original semantics except the intentional checksum annotation. A string timeout override changed both configuration and hash.
-4. Trunks added Helm 4.2.2 strict lint/render steps to the existing required images CI job. Review the chart and learn the Helm concepts from note 23; run the supplied local commands to observe rendering and values precedence. This is preparation, not deployment.
-5. Review the PR and passing checks, then merge through the existing gates. Change the existing Argo Application source path to the chart with a reviewed, explicit Application update; that Application is not itself currently managed by a parent Argo app. Its source path has not been changed in this checkpoint.
-6. Use the existing manual Argo sync and verify the rollout, Services and an actual order request. A first checksum annotation changes the Java Pod template and causes a Recreate restart; explain the brief outage and loss of in-memory orders before syncing. Keep Argo as the workload lifecycle owner; do not run helm install against these resources.
+1. Repeat the HTTPS readiness request and view the ALB target group. The problem to solve is how to hear about loss of healthy targets without having the console open.
+2. Inspect the target group's CloudWatch health metric. Choose one alarm and one SNS email subscription. Explain which resource the metric describes and how missing samples affect the alarm.
+3. Confirm the email subscription and verify notification delivery with a controlled test. Record delivery evidence separately from any simulated application failure.
+4. Begin the read-only Python investigator after the alert checkpoint. Use the known incident path to teach evidence collection before adding an LLM. The timeout drill remains available as a prepared scenario.
 
 ## Teaching order
 

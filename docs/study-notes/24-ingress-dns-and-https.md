@@ -1,6 +1,10 @@
 # 24 — Follow one HTTPS request to the Orders API
 
-Verified on 7 November 2026. The AWS Load Balancer Controller v3.6.2 Deployment is Ready at 1/1, its ServiceAccount is annotated with the lab IAM role, and the `alb` IngressClass exists. ACM shows the certificate for `orders.tanscape.online` as ISSUED in Mumbai. Cloudflare delegates that hostname's zone to Route 53. The proposed chart change passed local strict Helm lint and rendering in a temporary directory. Tan will type the chart change and deploy it through Argo. The ALB and HTTPS request remain to be verified.
+Verified on 7 November 2026. The AWS Load Balancer Controller v3.6.2 Deployment is Ready at 1/1, its ServiceAccount is annotated with the lab IAM role, and the `alb` IngressClass exists. ACM shows the certificate for `orders.tanscape.online` as ISSUED in Mumbai. Cloudflare delegates that hostname's zone to Route 53.
+
+When Tan ran `kubectl get ingress orders-api`, Kubernetes returned `NotFound`. PR #27 was open with all four checks passing. Argo was green on the older commit on `main`, so it had never received the Ingress. Trunks squash-merged the checked PR and requested an Argo sync of `b4c9008`. Argo reported Synced, Healthy and Succeeded. The controller then filled in the Ingress address and AWS registered the Java Pod on port 8080 as a healthy IP target.
+
+The port 443 listener has the issued ACM certificate and the port 80 listener redirects to HTTPS. Trunks checked HTTPS against the ALB first, keeping the public hostname for certificate verification, then created the A Alias in the Route 53 child zone. A normal public DNS request to the readiness URL returned HTTP 200 with `{"status":"UP"}`. Plain HTTP returned 301 to the HTTPS URL. The checked public route is the readiness endpoint.
 
 Imagine opening `https://orders.tanscape.online/actuator/health/readiness` on your phone. It first needs an IP address to connect to. Public DNS reaches Cloudflare, which refers lookups for this subdomain to Route 53. The Route 53 A Alias answers with the ALB's addresses. Your phone connects to one of those addresses on port 443.
 
@@ -16,7 +20,7 @@ The steps that build this path happen before anyone can use it.
 
 The ACM validation CNAME is the proof that you control the domain. The A Alias is the answer for where browser requests should go. Keep the validation CNAME available for ACM renewal while the certificate is in use.
 
-## Read the proposed Ingress from top to bottom
+## Read the Ingress from top to bottom
 
 - `ingressClassName: alb` selects the controller that will implement this request.
 - `scheme: internet-facing` gives the ALB a public entry point. Our two public subnets have the AWS discovery tag.

@@ -28,6 +28,8 @@ These notes grow after each hands-on checkpoint. They distinguish verified lab r
 | [22 — Payment timeout investigation](22-payment-timeout-investigation.md) | Prepared user-run slow-request exercise, HTTP versus probe health, timeout budgets and evidence limits |
 | [23 — Helm conversion](23-helm-conversion.md) | Chart/values/release/revision, template mechanics, precedence, config checksum, CI/GitOps, real-world tickets, troubleshooting and senior interview answers |
 | [24 — Ingress, DNS and HTTPS](24-ingress-dns-and-https.md) | Follow a request from Route 53 through an ACM-backed ALB, Ingress annotations, health checks and interview scenarios |
+| [25 — Interview and troubleshooting review](25-interview-and-troubleshooting-review.md) | Questions and fixes from Terraform through HTTPS, with links to the original checkpoint question sets |
+| [26 — Import and retire the public endpoint](26-public-edge-retirement.md) | Import-only plan, guarded Ingress pruning, AWS cleanup evidence and local access after ALB removal |
 
 The lab code is typed and run by Tan. Notes are maintained by Trunks from observed output. No Terraform state, variable values, access keys, or saved plans belong in Git.
 

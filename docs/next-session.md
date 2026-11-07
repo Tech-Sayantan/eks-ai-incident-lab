@@ -1,28 +1,34 @@
-# Next session — Helm conversion, then GitOps delivery
+# Tomorrow's first Python investigator checkpoint
 
-## Completed and verified
+Lab checkpoint verified on 7 November 2026. Argo pruned the public Ingress after PR #28. AWS confirms the ALB, target group and its network interfaces are gone. The Orders and payment Pods are Ready. A local port-forward to Orders returned HTTP 200 and `{"status":"UP"}`. Read [the public endpoint closeout](study-notes/26-public-edge-retirement.md) for the remaining DNS cleanup and state ownership.
 
-- Argo CD v3.6.1 is installed and Tan has used its UI.
-- The orders-lab Application is Synced and Healthy after a successful manual sync.
-- Both app Pods are Ready with zero restarts at closeout.
-- Internal Service-name health requests returned HTTP 200.
-- Java confirmed Tan's order and the payment service logged a matching successful authorization.
-- Independent repeat POST and GET returned HTTP 200 for the same CONFIRMED order; the correlated payment authorization count remained one.
-- Original first-create HTTP 201 was expected but not independently captured. The observed results are in study note 21.
+Picture a teammate saying, “I think the Orders rollout is stuck. Can you check?” We’ll make a small Python program that reads one Deployment snapshot and answers with the numbers it saw. One snapshot and one short report are enough for the first session.
 
-## Next hands-on sequence
+## What we’ll do together
 
-1. Refresh the named IAM login if needed. Verify the correct cluster, node, app Pods and Argo Application before changes.
-2. The controlled timeout exercise is deferred at Tan's request. Move directly to the Helm conversion in study note 23.
-3. Tan already created the three chart files and most substitutions. At Tan's explicit request, Trunks completed the Java Pod-template checksum and normalized final newlines. Actual chart lint/render passed; all six resources retain the original semantics except the intentional checksum annotation. A string timeout override changed both configuration and hash.
-4. Trunks added Helm 4.2.2 strict lint/render steps to the existing required images CI job. Review the chart and learn the Helm concepts from note 23; run the supplied local commands to observe rendering and values precedence. This is preparation, not deployment.
-5. Review the PR and passing checks, then merge through the existing gates. Change the existing Argo Application source path to the chart with a reviewed, explicit Application update; that Application is not itself currently managed by a parent Argo app. Its source path has not been changed in this checkpoint.
-6. Use the existing manual Argo sync and verify the rollout, Services and an actual order request. A first checksum annotation changes the Java Pod template and causes a Recreate restart; explain the brief outage and loss of in-memory orders before syncing. Keep Argo as the workload lifecycle owner; do not run helm install against these resources.
+1. Read the current Orders Deployment from the lab cluster. Use this command in your terminal when the named AWS session is active.
 
-## Teaching order
+   ```bash
+   kubectl --context eks-ai-incident-lab -n orders-lab \
+     get deployment orders-api -o json > /tmp/orders-api-deployment.json
+   ```
 
-Brief purpose → one small practical action → see its result → explain the fields and component interactions → diagnose a controlled failure → production tradeoffs and interview reasoning. Avoid introducing interview questions before the basic tool behavior has been observed.
+   Think of this JSON as a photo of what Kubernetes reported at that moment. If the live cluster is unavailable, we can use a small saved fixture with the same fields and label the report as a fixture.
 
-## Before stopping or resuming
+2. Trunks supplies the small Python reader. Tan runs it against the snapshot and checks the report against the JSON. The program takes the file path and whether it came from a live snapshot or a fixture. It reads the deployment name, namespace, desired replicas, ready replicas, and the two generation numbers. The generation numbers tell us whether the controller has processed the latest specification.
 
-Local port forwards can be stopped with Ctrl+C in their respective terminals. That closes local tunnels; it does not stop EKS or delete the applications. The EKS cluster and worker continue to incur charges until teardown. The Java store is in memory, so restarting Java loses its orders and idempotency keys. Do not infer persistence from a successful rollout or HTTP response.
+3. Read the result aloud. An example for a current snapshot might be `orders-lab/orders-api | READY | 1 of 1 replicas ready | generation 4 observed as 4`. The exact generation comes from your file. If the controller has processed the current spec and fewer Pods are ready than requested, the report says `NOT_READY`. If the snapshot cannot answer the question, it says `UNKNOWN` and explains what information is missing or stale. Zero desired replicas is a separate `SCALED_DOWN` result.
+
+The program reads a file. The live collection step reads a Kubernetes object. Giving an investigator read access lets it show a human the evidence while keeping rollout decisions with the operator. The public domain and ALB are outside this evidence path. A later independent HTTP check can use a temporary local port-forward to the Orders Service.
+
+## If you get stuck
+
+If `kubectl` says `Unauthorized`, first check your named AWS session and the `eks-ai-incident-lab` context. Refresh the lab login if it expired, then repeat the read. A failed read means we have no fresh evidence about the app. It should produce `UNKNOWN`, since an access error says something about our connection and permissions. A fixture gives us a way to practise the Python part while we resolve live access.
+
+## Interview practice after seeing the report
+
+**“The report says one of one Pods is ready. Does that prove checkout works?”** It proves the Deployment reported a ready replica for the current generation. Checkout also calls the payment service. I would run a request through the Orders API and trace its request ID through both services to verify that path.
+
+**“Why did you make the investigator read-only?”** It can help an operator explain a symptom without having permission to restart or modify a production service. I would keep its permission scoped to the evidence it needs, report uncertainty explicitly, and leave changes to the reviewed deployment process.
+
+Once the evidence reader works, Bedrock can help explain the collected evidence in plain language. RAG can add the relevant runbook. MCP can expose the same evidence reader as a tool. A2A comes later if we want a separate specialist investigator to collaborate. For this checkpoint, the result comes from Python reading the snapshot.

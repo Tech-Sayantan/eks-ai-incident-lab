@@ -1,6 +1,6 @@
 # Tomorrow's first Python investigator checkpoint
 
-Lab checkpoint verified on 7 November 2026. Argo pruned the public Ingress after PR #28. AWS confirms the ALB, target group and its network interfaces are gone. The Orders and payment Pods are Ready. A local port-forward to Orders returned HTTP 200 and `{"status":"UP"}`. Read [the public endpoint closeout](study-notes/26-public-edge-retirement.md) for the remaining DNS cleanup and state ownership.
+Lab checkpoint verified on 7 November 2026. Argo pruned the public Ingress after PR #28. AWS confirms the ALB, target group and its network interfaces are gone. The Route 53 child zone was retired after Cloudflare's delegation disappeared and its parent TTL elapsed. The Orders and payment Pods are Ready. A local port-forward to Orders returned HTTP 200 and `{"status":"UP"}`. Read [the public endpoint closeout](study-notes/26-public-edge-retirement.md) for the DNS cleanup and state ownership.
 
 Picture a teammate saying, “I think the Orders rollout is stuck. Can you check?” We’ll make a small Python program that reads one Deployment snapshot and answers with the numbers it saw. One snapshot and one short report are enough for the first session.
 

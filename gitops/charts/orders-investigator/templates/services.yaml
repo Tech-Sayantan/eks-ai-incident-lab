@@ -1,0 +1,59 @@
+{{- $namespace := .Release.Namespace -}}
+{{- $mcp := index .Values.workloads "orders-mcp" -}}
+{{- $payment := index .Values.workloads "payment-agent" -}}
+{{- $investigator := index .Values.workloads "orders-investigator" -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-investigator
+  namespace: {{ $namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-investigator
+  ports:
+    - name: http
+      port: {{ $investigator.port }}
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-mcp
+  namespace: {{ $namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-evidence
+  ports:
+    - name: http
+      port: {{ $mcp.port }}
+      targetPort: mcp
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-agent
+  namespace: {{ $namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-evidence
+  ports:
+    - name: http
+      port: {{ $payment.port }}
+      targetPort: a2a
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orders-qdrant
+  namespace: {{ $namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: orders-evidence
+  ports:
+    - name: http
+      port: {{ .Values.qdrant.port }}
+      targetPort: qdrant

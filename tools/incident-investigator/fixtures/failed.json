@@ -1,0 +1,14 @@
+{
+  "kind": "Deployment",
+  "metadata": {"generation": 13},
+  "spec": {"replicas": 1},
+  "status": {
+    "observedGeneration": 13,
+    "replicas": 1,
+    "updatedReplicas": 1,
+    "availableReplicas": 0,
+    "conditions": [
+      {"type": "Progressing", "status": "False", "reason": "ProgressDeadlineExceeded"}
+    ]
+  }
+}

@@ -13,3 +13,6 @@ crash.*.log
 /apps/**/target/
 /apps/**/node_modules/
 /apps/**/coverage/
+
+__pycache__/
+*.py[cod]

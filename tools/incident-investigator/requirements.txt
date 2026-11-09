@@ -1,0 +1,11 @@
+a2a-sdk[http-server]==1.2.3
+boto3[crt]==1.43.126
+fastapi==0.162.2
+fastembed==0.9.1
+httpx==0.28.1
+kubernetes==36.0.2
+mcp==2.3.0
+openai[bedrock]==3.46.0
+pillow==13.0.0
+qdrant-client==1.19.1
+uvicorn==0.54.0

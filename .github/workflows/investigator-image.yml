@@ -1,0 +1,84 @@
+name: Investigator image
+
+on:
+  pull_request:
+    paths:
+      - "tools/incident-investigator/**"
+      - "gitops/charts/orders-investigator/**"
+      - ".github/workflows/investigator-image.yml"
+  push:
+    branches: [main]
+    paths:
+      - "tools/incident-investigator/**"
+      - ".github/workflows/investigator-image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      IMAGE_TAG: ${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      IMAGE_REPOSITORY: eks-ai-incident-lab/orders-investigator
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 # v4.3.1
+        with:
+          version: v4.2.2
+      - name: Render chart with a validation digest
+        run: |
+          printf -v digest 'sha256:%064d' 0
+          helm lint --strict gitops/charts/orders-investigator --set-string image.digest="$digest"
+          helm template orders-investigator gitops/charts/orders-investigator \
+            --namespace orders-lab --kube-version 1.36.0 \
+            --set-string image.digest="$digest" >/tmp/orders-investigator.yaml
+      - name: Build linux/amd64 image
+        run: docker build -t orders-investigator:ci tools/incident-investigator
+      - name: Smoke test Python and the rollout checker in the image
+        run: |
+          set -euo pipefail
+          docker run --rm --network none orders-investigator:ci python -c \
+            'from investigator_api import app; from payment_agent import app; from orders_rag import embedding_model; next(embedding_model().query_embed("payment timeout"))'
+          docker run --rm orders-investigator:ci python check_rollout.py fixtures/healthy.json |
+            grep -Fx 'READY | desired=1 total=1 updated=1 available=1'
+          docker run --rm orders-investigator:ci python check_rollout.py fixtures/failed.json |
+            grep -Fx 'NOT_READY | desired=1 total=1 updated=1 available=0 | ProgressDeadlineExceeded'
+      - name: Scan the built image
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: orders-investigator:ci
+          severity: CRITICAL
+          ignore-unfixed: "true"
+          exit-code: "1"
+      - name: Assume the ECR image publisher role
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: aws-actions/configure-aws-credentials@v6.3.0
+        with:
+          role-to-assume: arn:aws:iam::923988301700:role/eks-ai-incident-lab-gha-image-publish
+          aws-region: ap-south-1
+          allowed-account-ids: "923988301700"
+      - name: Log in to ECR
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Publish and record immutable image digest
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+          image="$REGISTRY/$IMAGE_REPOSITORY:$IMAGE_TAG"
+          docker tag orders-investigator:ci "$image"
+          docker push "$image"
+          digest=$(aws ecr describe-images --repository-name "$IMAGE_REPOSITORY" \
+            --image-ids imageTag="$IMAGE_TAG" --query 'imageDetails[0].imageDigest' --output text)
+          [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf 'Investigator image: `%s/%s@%s`\n' "$REGISTRY" "$IMAGE_REPOSITORY" "$digest" \
+            >> "$GITHUB_STEP_SUMMARY"

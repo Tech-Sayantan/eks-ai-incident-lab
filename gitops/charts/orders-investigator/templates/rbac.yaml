@@ -1,0 +1,43 @@
+{{- $namespace := .Release.Namespace }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orders-investigator
+  namespace: {{ $namespace }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: orders-evidence
+  namespace: {{ $namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: orders-evidence
+  namespace: {{ $namespace }}
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["orders-api"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["list"]
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: orders-evidence
+  namespace: {{ $namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: orders-evidence
+    namespace: {{ $namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: orders-evidence

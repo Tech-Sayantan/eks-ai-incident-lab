@@ -1,0 +1,208 @@
+{{- $digest := required "Set image.digest to the published ECR digest" .Values.image.digest -}}
+{{- if and $digest (not (regexMatch "^sha256:[0-9a-f]{64}$" $digest)) -}}
+{{- fail "image.digest must have the form sha256:<64 lowercase hexadecimal characters>" -}}
+{{- end -}}
+{{- $image := printf "%s@%s" .Values.image.repository $digest -}}
+{{- $namespace := .Release.Namespace -}}
+{{- $mcp := index .Values.workloads "orders-mcp" -}}
+{{- $payment := index .Values.workloads "payment-agent" -}}
+{{- $investigator := index .Values.workloads "orders-investigator" -}}
+{{- $mcpHost := printf "orders-mcp.%s.svc.cluster.local:%v" $namespace $mcp.port -}}
+{{- $paymentURL := printf "http://payment-agent.%s.svc.cluster.local:%v" $namespace $payment.port -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-investigator
+  namespace: {{ $namespace }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: orders-investigator
+  template:
+    metadata:
+      labels:
+        app: orders-investigator
+    spec:
+      serviceAccountName: orders-investigator
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: orders-investigator
+          image: {{ $image | quote }}
+          command: {{ $investigator.command | toJson }}
+          ports:
+            - name: http
+              containerPort: {{ $investigator.port }}
+          env:
+            - name: AWS_REGION
+              value: {{ .Values.awsRegion | quote }}
+            - name: ORDERS_MCP_URL
+              value: {{ printf "http://%s/mcp" $mcpHost | quote }}
+            - name: QDRANT_URL
+              value: {{ printf "http://orders-qdrant.%s.svc.cluster.local:%v" $namespace .Values.qdrant.port | quote }}
+            - name: PAYMENT_A2A_URL
+              value: {{ $paymentURL | quote }}
+          resources: {{ toYaml $investigator.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: {{ $investigator.healthPath }}
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: {{ $investigator.healthPath }}
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-evidence
+  namespace: {{ $namespace }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: orders-evidence
+  template:
+    metadata:
+      labels:
+        app: orders-evidence
+    spec:
+      serviceAccountName: orders-evidence
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: orders-mcp
+          image: {{ $image | quote }}
+          command: {{ $mcp.command | toJson }}
+          ports:
+            - name: mcp
+              containerPort: {{ $mcp.port }}
+          env:
+            - name: ORDERS_LIVE_EVIDENCE
+              value: "1"
+            - name: ORDERS_NAMESPACE
+              value: {{ $namespace | quote }}
+            - name: ORDERS_MCP_ALLOWED_HOST
+              value: {{ $mcpHost | quote }}
+          resources: {{ toYaml $mcp.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            tcpSocket:
+              port: mcp
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            tcpSocket:
+              port: mcp
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+          volumeMounts:
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+        - name: payment-agent
+          image: {{ $image | quote }}
+          command: {{ $payment.command | toJson }}
+          ports:
+            - name: a2a
+              containerPort: {{ $payment.port }}
+          env:
+            - name: PAYMENT_A2A_URL
+              value: {{ $paymentURL | quote }}
+            - name: PAYMENT_NAMESPACE
+              value: {{ $namespace | quote }}
+          resources: {{ toYaml $payment.resources | nindent 12 }}
+          securityContext:
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: {{ $payment.healthPath }}
+              port: a2a
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: {{ $payment.healthPath }}
+              port: a2a
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+          volumeMounts:
+            - name: kube-api-access
+              mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+              readOnly: true
+        - name: qdrant
+          image: {{ .Values.qdrant.image | quote }}
+          ports:
+            - name: qdrant
+              containerPort: {{ .Values.qdrant.port }}
+          resources: {{ toYaml .Values.qdrant.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: qdrant
+            periodSeconds: 5
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: qdrant
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+          volumeMounts:
+            - name: storage
+              mountPath: /qdrant/storage
+      volumes:
+        - name: storage
+          emptyDir:
+            sizeLimit: 512Mi
+        - name: kube-api-access
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  expirationSeconds: 3600
+              - configMap:
+                  name: kube-root-ca.crt
+                  items:
+                    - key: ca.crt
+                      path: ca.crt
+              - downwardAPI:
+                  items:
+                    - path: namespace
+                      fieldRef:
+                        fieldPath: metadata.namespace

@@ -43,6 +43,14 @@ jobs:
         working-directory: infra/live/lab
         run: terraform validate -no-color
 
+      - name: Initialize investigator providers without remote state
+        working-directory: infra/live/investigator
+        run: terraform init -backend=false -input=false -lockfile=readonly
+
+      - name: Validate investigator Terraform
+        working-directory: infra/live/investigator
+        run: terraform validate -no-color
+
       - name: Scan Terraform configuration
         uses: aquasecurity/trivy-action@v0.36.0
         with:

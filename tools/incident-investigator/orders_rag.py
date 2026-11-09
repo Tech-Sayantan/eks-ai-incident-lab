@@ -2,6 +2,7 @@ import argparse
 import os
 from functools import lru_cache
 from contextlib import closing
+from threading import Lock
 
 from fastembed import TextEmbedding
 from openai import OpenAI
@@ -12,6 +13,7 @@ from rollout_tool_call import get_rollout_report
 
 
 COLLECTION = "orders_runbooks_bge_small_v1"
+INDEX_LOCK = Lock()
 RUNBOOKS = [
     {
         "source": "orders-checkout-smoke",
@@ -49,6 +51,7 @@ def embedding_model():
         model_name="BAAI/bge-small-en-v1.5",
         cache_dir=os.getenv("FASTEMBED_CACHE_PATH", "work/embedding-models"),
         threads=2,
+        local_files_only=os.getenv("FASTEMBED_LOCAL_FILES_ONLY") == "1",
     )
 
 
@@ -65,7 +68,7 @@ def retrieve(question):
         if qdrant_url
         else QdrantClient(path="work/qdrant-runbooks")
     )
-    with closing(connection) as db:
+    with INDEX_LOCK, closing(connection) as db:
         if not db.collection_exists(COLLECTION):
             db.create_collection(
                 collection_name=COLLECTION,

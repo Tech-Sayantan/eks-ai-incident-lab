@@ -1,6 +1,6 @@
 image:
   repository: 923988301700.dkr.ecr.ap-south-1.amazonaws.com/eks-ai-incident-lab/orders-investigator
-  digest: "sha256:ae7ee5397f56f88bc6aa3e50e64bdf4cbebb0b4cf074adc00cf77f2ad9545564"
+  digest: "sha256:a3a4795d1204ef08baec2c1a81a7395d576fa7561d5a5e0f183e101303345c25"
 
 awsRegion: ap-south-1
 

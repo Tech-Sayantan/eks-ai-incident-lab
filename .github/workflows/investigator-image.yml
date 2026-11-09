@@ -49,6 +49,9 @@ jobs:
             grep -Fx 'READY | desired=1 total=1 updated=1 available=1'
           docker run --rm orders-investigator:ci python check_rollout.py fixtures/failed.json |
             grep -Fx 'NOT_READY | desired=1 total=1 updated=1 available=0 | ProgressDeadlineExceeded'
+          docker run --rm --network none \
+            --mount "type=bind,src=$PWD/tools/incident-investigator/tests,dst=/tests,readonly" \
+            orders-investigator:ci python -m unittest discover -s /tests
       - name: Scan the built image
         uses: aquasecurity/trivy-action@v0.36.0
         with:

@@ -90,14 +90,18 @@ def _cluster_events(request_id: str) -> tuple[list[dict], bool]:
         incomplete = not pods.items or bool(pods.metadata._continue)
         for pod in pods.items:
             try:
-                logs = api.read_namespaced_pod_log(
+                # The SDK can stringify bytes as b'...\n...'. Decode the
+                # plain-text response so each JSON log line stays separate.
+                with api.read_namespaced_pod_log(
                     pod.metadata.name,
                     namespace,
                     container=PAYMENT_CONTAINER,
                     tail_lines=MAX_LOG_LINES,
                     limit_bytes=MAX_LOG_BYTES,
+                    _preload_content=False,
                     _request_timeout=REQUEST_TIMEOUT,
-                )
+                ) as response:
+                    logs = response.read(MAX_LOG_BYTES).decode("utf-8", errors="replace")
             except (ApiException, HTTPError) as error:
                 LOGGER.warning("Payment Pod log read failed (%s).", type(error).__name__)
                 incomplete = True

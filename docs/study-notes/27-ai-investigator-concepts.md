@@ -42,6 +42,12 @@ The hosted API in `investigator_api.py` shows the same pattern with a tool calle
 
 The model can suggest a tool call. The application owns execution, input checks, timeouts, and the maximum number of calls. If the tool fails, the agent should expose the missing evidence and avoid inventing a result. The model’s call ID pairs a tool response with a particular request. A customer request ID is a different identifier used to correlate application logs.
 
+## The Python and HTTP basics to practise first
+
+1. Read a saved Deployment JSON file into a Python dictionary. Write a function that returns `READY` or `NOT_READY` and try both bundled fixtures. Practise lists, dictionaries, `if`, imports, and handling invalid input.
+2. Learn just enough classes to read `Incident(BaseModel)` in the API. An `Incident` object represents one incoming request, with a request ID and a question. FastAPI validates those fields before our handler runs.
+3. Make a small FastAPI app with `GET /healthz` and `POST /rollout`. Send JSON with curl and inspect the response body and status. Once you can explain who sends the request and which function handles it, move on to the MCP client and server.
+
 ## Where to start reading the Python
 
 1. In [check_rollout.py](../../tools/incident-investigator/check_rollout.py), find `def check_rollout`. A function takes an input and returns a result. Here it reads keys in a dictionary created from Kubernetes JSON. `status.get("availableReplicas", 0)` means “use this key if it exists, otherwise use zero.”

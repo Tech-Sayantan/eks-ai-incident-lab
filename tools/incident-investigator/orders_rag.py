@@ -63,12 +63,8 @@ def retrieve(question):
     query_vector = next(encoder.query_embed(question))
 
     qdrant_url = os.getenv("QDRANT_URL")
-    connection = (
-        QdrantClient(url=qdrant_url, timeout=5)
-        if qdrant_url
-        else QdrantClient(path="work/qdrant-runbooks")
-    )
-    with INDEX_LOCK, closing(connection) as db:
+    settings = {"url": qdrant_url, "timeout": 5} if qdrant_url else {"path": "work/qdrant-runbooks"}
+    with INDEX_LOCK, closing(QdrantClient(**settings)) as db:
         if not db.collection_exists(COLLECTION):
             db.create_collection(
                 collection_name=COLLECTION,
